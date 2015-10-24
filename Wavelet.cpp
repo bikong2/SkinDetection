@@ -15,8 +15,17 @@ Wavelet::~Wavelet()
 
 Mat Wavelet::WaveletImage(Mat src)
 {
+	Mat equal_src;
+	vector<Mat> splitBGR(src.channels()); // 彩色图像直方图均衡
+	split(src, splitBGR);
+	for (int i = 0; i < src.channels(); i++)
+	{
+		equalizeHist(splitBGR[i], splitBGR[i]);
+	}
+	merge(splitBGR, equal_src);
+
 	int nLayer = _layer;
-	IplImage pSrc = src;
+	IplImage pSrc = equal_src;
 	CvSize size = cvGetSize(&pSrc); // 计算小波图象大小
 	IplImage *pWavelet = cvCreateImage(size, IPL_DEPTH_32F, pSrc.nChannels); // 创建小波图象
 	if (pWavelet)
@@ -46,7 +55,7 @@ Mat Wavelet::WaveletImage(Mat src)
 		cvConvertScale(pWavelet, &pSrc, 1, 128);
 		cvReleaseImage(&pWavelet);
 	}
-	Mat des(&pSrc, false);
+	Mat des(&pSrc, true);
 	return des;
 }
 
