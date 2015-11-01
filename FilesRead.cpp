@@ -30,6 +30,7 @@ void GetFiles(string path, string exd, vector<string>& files)
 			else
 			{
 				if(strcmp(fileinfo.name, ".") != 0  &&  strcmp(fileinfo.name, "..") != 0)
+					//cout << pathName.assign(path).append("/").append(fileinfo.name) << endl;
 					files.push_back(pathName.assign(path).append("/").append(fileinfo.name));
 			}
 		} while (_findnext(hFile, &fileinfo) == 0);
