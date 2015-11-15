@@ -19,9 +19,9 @@ const int H = 2592;
 const int W = 3872;
 const int NLAYER = 1;
 const Rect face_rect = Rect(int(0.25*W), int(0.25*H), int(0.5*W), int(0.5*H));
-int ChooseList[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40};
-//int ChooseList[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 19, 21};
-const int ChooseNum = 40;
+//int ChooseList[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40};
+int ChooseList[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 19, 21};
+const int ChooseNum = 15;
 
 bool num_in_array(int A[], int Len, int Num)
 {
@@ -84,7 +84,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	int img_num = 0;
 	int train_pos = 0;
 	int train_neg = 0;
-	Mat ori, ori_roi, resized, des, spot, gray, resized_gray;
+	Mat ori, ori_roi, resized, des, spot, gray, resized_gray, des_roi, des_gray;
 
 	for (map<string, InfoStruct>::iterator it = InfoMap.begin(); it != InfoMap.end(); ++it) {
 		// wavelet transform
@@ -101,7 +101,15 @@ int _tmain(int argc, _TCHAR* argv[])
 		Mat global;
 		threshold(resized_gray, global, thr, 255, CV_THRESH_BINARY);
 		des = wavelet.WaveletImage(ori_roi);
-		//imshow("TEST", des(Rect(0, 0, W/4, H/4)));
+		des_roi = des(Rect(0, 0, W/4, H/4));
+		cvtColor(des_roi, des_gray, CV_BGR2GRAY);
+		equalizeHist(des_gray, des_gray);
+		// adaptive binary
+		int blockSize  = 25;
+		int constValue = 5;
+		Mat local;
+		adaptiveThreshold(des_gray, local, 255, CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, blockSize, constValue);
+		//imshow("TEST", local);
 		//waitKey();
 
 		// skin color segmentation
@@ -169,8 +177,8 @@ int _tmain(int argc, _TCHAR* argv[])
  		cvtColor(spot, gray, CV_BGR2GRAY);
 		//imshow("TEST", gray);
 		//imshow("TEST", spot+resized);
-		imshow("TEST", spot+des(Rect(0, 0, W/4, H/4)));
-		waitKey(5);
+		//imshow("TEST", spot+des(Rect(0, 0, W/4, H/4)));
+		//waitKey(5);
 		for (int h = 0; h < gray.rows; h++) {
 			for (int w = 0; w < gray.cols; w++) {
 				if ((int(gray.at<uchar>(h, w)) >= 100 || int(darkest_gray.at<uchar>(h, w)) >= 100) && (global.at<uchar>(h, w) >= 100))
@@ -219,7 +227,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	params.class_weights = &weight;
 
 	string save_name = "svm_model.xml";
-	TrainModel(data_mat, res_mat, params, save_name);
+	//TrainModel(data_mat, res_mat, params, save_name);
 
 	CvSVM svm;
 	svm.load(save_name.c_str());
@@ -278,8 +286,11 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 		imshow("TEST", resized_roi);
 		waitKey();
+		//char save_path[1024];
+		//sprintf_s(save_path, 1024, "../datas/segmentation_imgs/%d.jpg", frame_num);
+		//imwrite(save_path, resized_roi);
+		//cout << save_path << " save success!" << endl;
 	}
-
  	return 0;
 }
 
